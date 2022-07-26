@@ -1,5 +1,7 @@
   import { browser } from "./browser.js";
   import fs from 'fs/promises';
+  import { addOneProperty } from "../database/write-listings.js";
+  const firstPageUrl="https://kenyapropertycentre.com/for-sale";
   const browserInstance=await browser();
   const page=async(link)=>{
     const page=await browserInstance.newPage();
@@ -44,11 +46,13 @@
       
       })
     });
-    console.log(properties[0]);
     for(const propertyListing of properties){
-      propertyListings.push(await visitProductPage(propertyListing));
+     let completePropertyListing= await visitProductPage(propertyListing);
+      await addOneProperty(completePropertyListing,"listings","Kenya");
+      await fs.appendFile('data.json',JSON.stringify(propertyListings,null,"\t"));
     }
-    fs.appendFile('data.txt',propertyListings.join(','));
+    await browserTab.close();
+    goToRoot(nextPage);
     }
   /**
     * 
@@ -58,18 +62,16 @@
     const visitProductPage=async(productObject)=>{
       let link=productObject.readMore;
       const productPage=await page(link);
-      /* Data to fetch
-      listing document fields:
-bathrooms: (int),,city:(string),
-furnished:bool,geolocation:map,lat:number,lng:number,imgUrls:(array of strings)
-,name:(string,offer:tru,parking: boolea,regularPrice: (string)
-type: “buy”,userRef: "webscraper",email: (string),phoneNumber: (string)
-
-      */
       await productPage.click(".btn.btn-base.showPhone");
-      const phone=await productPage.$eval(
+      const phone=await productPage.$$eval(
         "span[data-type='phoneNumber']>a.underline"
-        ,anchor=>anchor.textContent
+        ,anchors=>{
+          
+          let phoneNums= anchors.map(anchor=>{
+            return anchor.textContent
+          })
+          return [...new Set(phoneNums)];
+        }
         );
       const images=await productPage.$$eval(".lSPager.lSGallery>li>a>img"
       ,imgs=>{
@@ -79,6 +81,26 @@ type: “buy”,userRef: "webscraper",email: (string),phoneNumber: (string)
       productObject["phoneNumber"]=phone;
       productObject["description"]=await productPage.$eval(
         "p[itemprop='description']",paragraph=>paragraph.textContent);
+        productObject["tabulatedDetails"]=await productPage.$$eval(
+          "table.table>tbody>tr>td",tableCells=>{
+            var data={};
+            tableCells.forEach(tableCell=>{
+              try{
+              let detail=(tableCell.textContent.split(":"));
+              if(detail.length==2)
+              data[`${detail[0].trim()}`]=detail[1].trim();
+              }
+              catch(ex){
+                console.log(ex);
+                return data;
+              }
+              console.log(data);
+              
+            }
+            
+            )
+            return data;
+          })
       await productPage.click("a[href='#tab-map']");
       console.log(productObject);
       await productPage.waitForTimeout(4000);
@@ -109,7 +131,7 @@ type: “buy”,userRef: "webscraper",email: (string),phoneNumber: (string)
       return productObject;
       
     }
-    goToRoot("https://kenyapropertycentre.com/for-sale");
+    goToRoot(firstPageUrl);
 
  
 
