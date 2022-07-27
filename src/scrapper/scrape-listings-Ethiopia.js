@@ -1,20 +1,23 @@
 import { browser } from "./browser.js";
 import fs from 'fs/promises';
 import { addOneProperty } from "../database/write-listings.js";
-const firstPageUrl="https://ghanapropertycentre.com/for-sale";
-const COUNTRY="GHANA";
+const firstPageUrl="https://ethiopiapropertycentre.com/for-sale";
+const COUNTRY="ETHIOPIA";
 const DB_COLLECTION="listings";
 const browserInstance=await browser();
 const page=async(link)=>{
   const page=await browserInstance.newPage();
   page.setDefaultNavigationTimeout(0);
   await page.goto(link);
+  await page.waitForTimeout(5000);
+
   return page;
   
 }
   const propertyListings=[];
-  const goToRoot=async(link)=>{
+  const goToRootEthiopia=async(link)=>{
   const browserTab=await page(link);
+  await browserTab.waitForSelector('.row.property-list');
   const properties=await browserTab.$$eval('.row.property-list',propertiesList=>{
     return propertiesList.map(property=>{
       let propertyInfo={};
@@ -48,8 +51,7 @@ const page=async(link)=>{
       return propertyInfo;
     });
   });
-  console.log(properties);
-  const nextPage=await browserTab.$eval("ul.pagination> li:last-child > a"
+  const nextPage=await browserTab.$eval("ul.pagination>li:last-child>a"
   ,anchor=>{
       try{
         return anchor.href
@@ -58,14 +60,17 @@ const page=async(link)=>{
         return false;
       }
     
+  
   });
+
   for(const propertyListing of properties){
    let completePropertyListing= await visitProductPage(propertyListing);
     await addOneProperty(completePropertyListing,DB_COLLECTION,COUNTRY);
     await fs.appendFile('data.json',JSON.stringify(completePropertyListing,null,"\t"));
   }
+  console.log(`${nextPage?nextPage:"Next Page Not Available"}`);
   await browserTab.close();
-  goToRoot(nextPage);
+  // goToRootEthiopia(nextPage);
   }
 /**
   * 
@@ -75,6 +80,7 @@ const page=async(link)=>{
   const visitProductPage=async(productObject)=>{
     let link=productObject.readMore;
     const productPage=await page(link);
+  try{
     await productPage.click(".btn.btn-base.showPhone");
     const phone=await productPage.$$eval(
       "span[data-type='phoneNumber']>a.underline"
@@ -86,12 +92,19 @@ const page=async(link)=>{
         return [...new Set(phoneNums)];
       }
       );
+    productObject["phoneNumber"]=phone;
+
+  }
+  catch(ex){
+    productObject["phoneNumber"]="Not Specified";
+    console.log(ex);
+  }
+   
     const images=await productPage.$$eval(".lSPager.lSGallery>li>a>img"
     ,imgs=>{
       return imgs.map(img=>img.src);
     });
     productObject["imgUrls"]=images;
-    productObject["phoneNumber"]=phone;
     productObject["description"]=await productPage.$eval(
       "p[itemprop='description']",paragraph=>paragraph.textContent);
       productObject["tabulatedDetails"]=await productPage.$$eval(
@@ -151,7 +164,7 @@ const page=async(link)=>{
     return productObject;
     
   }
-  goToRoot(firstPageUrl);
+  goToRootEthiopia(firstPageUrl);
 
 
 

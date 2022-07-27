@@ -1,6 +1,6 @@
   // import { db } from "../config/firebase.config.js";
   import { db } from '../config/firebase-terry.config.js';
-  import {doc,collection,addDoc} from 'firebase/firestore';
+  import {collection,doc,addDoc,deleteDoc,query,where, getDocs, setDoc} from 'firebase/firestore';
   import dayjs from "dayjs";
 import { organizeListing } from "./db-structure.js";
  
