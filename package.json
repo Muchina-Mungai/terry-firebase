@@ -2,6 +2,9 @@
   "name": "terry-firebase",
   "version": "1.0.0",
   "description": "A project to scrap properties website and save the data in firebase",
+  "engines":{
+    "node":"17.3.0"
+  },
   "main": "index.js",
   "type": "module",
   "scripts": {
