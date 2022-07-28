@@ -1,4 +1,5 @@
   import { addOneProperty } from '../database/write-listings.js';
+  import fs from 'fs/promises';
 import {browser} from './browser.js';
   const startUrl="https://www.century21global.com/for-sale-residential/South-Africa";
   const COUNTRY="SOUTH AFRICA";
@@ -11,14 +12,14 @@ import {browser} from './browser.js';
   }
   const listingsTab=await makePage();
   const detailsTab=await makePage();
-  const visitListingsPage=async(link)=>{
+ export const visitListingsPage=async(link=startUrl)=>{
       await listingsTab.goto(link);
       await listingsTab.waitForSelector('.search-result');
       const properties=await listingsTab.$$eval('.search-result',listings=>{
         return listings.map(listing=>{
           let propertyInfo={};
           propertyInfo["readMore"]=listing?.querySelector('a.search-result-info').href||false;
-          propertyInfo["address"]=listing.querySelector(".search-result-label").textContent.trim();
+          propertyInfo["address"]=listing.querySelector(".property-address+span.search-result-label").textContent.trim();
           propertyInfo["geolocation"]={
             lat:listing.querySelector(".map-coordinates").getAttribute('data-lat'),
             lng:listing.querySelector(".map-coordinates").getAttribute('data-lng')
@@ -45,11 +46,22 @@ import {browser} from './browser.js';
           return propertyInfo;
         });
       });
-      const nextPage=await listingsTab.$eval("a[aria-label='Next']",anchor=>anchor.href);
-     let completeListing=await visitDetailsPage(properties[0]);
-     await addOneProperty(completeListing,WRITE_FIRESTORE_COLLECTION,COUNTRY);
+      
+      const nextPage=await listingsTab.$eval("a[aria-label='Next']"
+      ,anchor=>{
+        return anchor?.href||false;
+      });
+      for(const property of properties){
+        let completeListing=await visitDetailsPage(property);
+        await fs.writeFile(`${COUNTRY}-listings.json`,JSON.stringify(completeListing,null,"\t"))
+        await addOneProperty(completeListing,WRITE_FIRESTORE_COLLECTION,COUNTRY);
+      }
+      if(nextPage){
+       await visitListingsPage(nextPage);
+      }
+      return;
     }
-    visitListingsPage(startUrl);
+    // visitListingsPage(startUrl);
 
 
     const visitDetailsPage=async(propertyObject)=>{
@@ -112,9 +124,13 @@ import {browser} from './browser.js';
         });
         propertyObject["country"]=COUNTRY;
         propertyObject["city"]=propertyObject.address.split(',')[0].trim();
+        if(propertyObject.city=='South Africa'){
+
+        }
         propertyObject["title"]=await detailsTab.$eval(".col-xs-12",heading=>{
           return heading.textContent.split('\n').pop().trim()
         })
-      console.log(propertyObject);
+      console.log(`Listing  
+      ${JSON.stringify(propertyObject,null,4)}`);
       return propertyObject;
     }

@@ -1,0 +1,67 @@
+import express from 'express';
+import { Router } from 'express';
+import dotenv from 'dotenv';
+import { goToRootKenya } from './scrapper/scrape-listings.js';
+import {goToRootEthiopia} from './scrapper/scrape-listings-Ethiopia.js'
+import { visitListingsPage } from './scrapper/scrape-listings-South-Africa.js';
+import {goToRootNigeria} from './scrapper/scrape-listings-Nigeria.js'
+import {goToRootGhana} from './scrapper/scrape-listings-Ghana.js'
+dotenv.config();
+
+  const router=Router();
+  const app=express();
+  app.use('/scraper',router);
+  router.get("/kenya",(req,res)=>{
+    try{
+      goToRootKenya();
+      res.send("Scraping from the Kenyan Website")
+    }
+    catch(ex){
+      console.log(ex);
+      
+    }
+  });
+  router.get('/ethiopia',(req,res)=>{
+    try{
+      goToRootEthiopia();
+      res.send("Scraping from the Ethiopian Website")
+    }
+    catch(ex){
+      console.log(ex);
+      
+    }
+  })
+  router.get('/ghana',(req,res)=>{
+    try{
+      res.send("Scraping from the Ghanaian Website")
+      goToRootGhana();
+    }
+    catch(ex){
+      console.log(ex);
+      
+    }
+  }); 
+  router.get('/nigeria',(req,res)=>{
+    try{
+      res.send("Scraping from the Nigerian Website");
+      goToRootNigeria()
+    }
+    catch(ex){
+      console.log(ex);
+      
+    }
+  });
+  router.get('/south-africa',(req,res)=>{
+    try{
+      res.send("Scraping from the South African Website")
+      visitListingsPage();
+    }
+    catch(ex){
+      console.log(ex);
+      
+    }
+  });
+  const PORT=process.env.PORT;
+  app.listen(PORT,()=>{
+    console.log(`App started on port ${PORT}`);
+  })

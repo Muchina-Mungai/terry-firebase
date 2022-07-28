@@ -24,7 +24,7 @@
   listingDocument.geolocation=property?.geolocation||"Geocordinates Not Found";
   listingDocument.offer=true;
   listingDocument.imgUrls=property.imgUrls
-  listingDocument.bedrooms=Number(property.tabulatedDetails?.Bedrooms||property.title.trim().charAt(0));
+  listingDocument.bedrooms=Number(property.tabulatedDetails?.Bedrooms||property.title.trim().charAt(0))||"Not Found";
   listingDocument.type="Buy";
   listingDocument.email=property?.email||"Not Set";
   listingDocument.regularPrice=property?.price?.currency+" "+property?.price?.value;
@@ -33,7 +33,7 @@
   property.tabulatedDetails.furnished:true;
   listingDocument.userRef="Web Scraper";
   listingDocument.parking='Parking Spaces' in property.tabulatedDetails
-  listingDocument.bathrooms='Bathrooms' in property.tabulatedDetails?
+  listingDocument.bathrooms='Bathrooms' in property.tabulatedDetails && property.tabulatedDetails.Bathrooms?
   Number(property.tabulatedDetails["Bathrooms"]):"Not Specified"
 
 

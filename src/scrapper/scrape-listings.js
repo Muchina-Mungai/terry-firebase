@@ -2,6 +2,8 @@
   import fs from 'fs/promises';
   import { addOneProperty } from "../database/write-listings.js";
   const firstPageUrl="https://kenyapropertycentre.com/for-sale";
+  const COUNTRY="KENYA";
+  const COLLECTION='LISTINGS';
   const browserInstance=await browser();
   const page=async(link)=>{
     const page=await browserInstance.newPage();
@@ -11,7 +13,7 @@
     
   }
     const propertyListings=[];
-    const goToRoot=async(link)=>{
+    export const goToRootKenya=async(link=firstPageUrl)=>{
     const browserTab=await page(link);
     const properties=await browserTab.$$eval('.row.property-list'
     ,propertiesList=>{
@@ -34,25 +36,26 @@
       });
     });
   
-    const nextPage=await browserTab.$$eval("ul.pagination> li:last-child > a"
-    ,anchors=>{
-      return anchors.map(anchor=>{
+    const nextPage=await browserTab.$eval("ul.pagination> li:last-child > a"
+    ,anchor=>{
         try{
-          return anchor.href
+          return anchor.href||false
         }
         catch(ex){
           return false;
         }
-      
-      })
+     
     });
     for(const propertyListing of properties){
      let completePropertyListing= await visitProductPage(propertyListing);
-      await addOneProperty(completePropertyListing,"listings","Kenya");
-      await fs.appendFile('data.json',JSON.stringify(propertyListings,null,"\t"));
+      await addOneProperty(completePropertyListing,COLLECTION,COUNTRY);
+      await fs.appendFile(`${COUNTRY}-listing.json`,JSON.stringify(completePropertyListing,null,"\t"));
     }
     await browserTab.close();
-    goToRoot(nextPage);
+    if(nextPage){
+    goToRootKenya(nextPage);
+    }
+    return;
     }
   /**
     * 
@@ -131,7 +134,7 @@
       return productObject;
       
     }
-    goToRoot(firstPageUrl);
+    // goToRootKenya(firstPageUrl);
 
  
 

@@ -13,7 +13,7 @@ const page=async(link)=>{
   
 }
   const propertyListings=[];
-  const goToRoot=async(link)=>{
+ export const goToRootGhana=async(link=firstPageUrl)=>{
   const browserTab=await page(link);
   const properties=await browserTab.$$eval('.row.property-list',propertiesList=>{
     return propertiesList.map(property=>{
@@ -52,7 +52,7 @@ const page=async(link)=>{
   const nextPage=await browserTab.$eval("ul.pagination> li:last-child > a"
   ,anchor=>{
       try{
-        return anchor.href
+        return anchor?.href||false
       }
       catch(ex){
         return false;
@@ -62,10 +62,13 @@ const page=async(link)=>{
   for(const propertyListing of properties){
    let completePropertyListing= await visitProductPage(propertyListing);
     await addOneProperty(completePropertyListing,DB_COLLECTION,COUNTRY);
-    await fs.appendFile('data.json',JSON.stringify(completePropertyListing,null,"\t"));
+    await fs.writeFile(`${COUNTRY}-listings.json`,JSON.stringify(completePropertyListing,null,"\t"));
   }
   await browserTab.close();
-  goToRoot(nextPage);
+  if(nextPage){
+   await goToRootGhana(nextPage);
+  }
+  return;
   }
 /**
   * 
@@ -151,7 +154,7 @@ const page=async(link)=>{
     return productObject;
     
   }
-  goToRoot(firstPageUrl);
+  // goToRootGhana(firstPageUrl);
 
 
 
