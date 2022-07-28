@@ -3,7 +3,7 @@
   import { addOneProperty } from "../database/write-listings.js";
   const firstPageUrl="https://kenyapropertycentre.com/for-sale";
   const COUNTRY="KENYA";
-  const COLLECTION='LISTINGS';
+  const COLLECTION='listings';
   const browserInstance=await browser();
   const page=async(link)=>{
     const page=await browserInstance.newPage();
@@ -49,7 +49,7 @@
     for(const propertyListing of properties){
      let completePropertyListing= await visitProductPage(propertyListing);
       await addOneProperty(completePropertyListing,COLLECTION,COUNTRY);
-      await fs.appendFile(`${COUNTRY}-listing.json`,JSON.stringify(completePropertyListing,null,"\t"));
+      await fs.writeFile(`${COUNTRY}-listing.json`,JSON.stringify(completePropertyListing,null,"\t"));
     }
     await browserTab.close();
     if(nextPage){
