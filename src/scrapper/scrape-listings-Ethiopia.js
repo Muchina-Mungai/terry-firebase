@@ -4,24 +4,27 @@
   const firstPageUrl="https://ethiopiapropertycentre.com/for-sale";
   const COUNTRY="ETHIOPIA";
   const DB_COLLECTION="listings";
-  const browserInstance=await browser();
+  let browserInstance=null;
   const page=async(link)=>{
-    const page=await browserInstance.newPage();
+    const page=await browserInstance?.newPage();
     page.setDefaultNavigationTimeout(0);
     await page.goto(link);
-    // await page.waitForTimeout(10000);
+    await page.waitForTimeout(10000);
 
     return page;
     
   }
     const propertyListings=[];
-    export const goToRootEthiopia=async(link=firstPageUrl)=>{
+    export const goToRootEthiopia=async(browser,link=firstPageUrl)=>{
+      browserInstance=await browser;
+      console.log(`Visiting ${link}`);
     const browserTab=await page(link);
-    await browserTab.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/83.0.4103.116 Safari/537.36');
-    await browserTab.waitForSelector('.row.property-list');
-    const properties=await browserTab.$$eval('.row.property-list',propertiesList=>{
-      return propertiesList.map(property=>{
-        let propertyInfo={};
+    try{
+      await browserTab.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/83.0.4103.116 Safari/537.36');
+      await browserTab.waitForSelector('.row.property-list');
+      const properties=await browserTab.$$eval('.row.property-list',propertiesList=>{
+        return propertiesList.map(property=>{
+          let propertyInfo={};
         propertyInfo["readMore"]=property.querySelector('div.description>a').href
         try{ 
           propertyInfo["address"]=property.querySelector("address>strong").textContent
@@ -52,7 +55,8 @@
         return propertyInfo;
       });
     });
-    const nextPage=await browserTab.$eval("ul.pagination>li:last-child>a"
+  
+  const nextPage=await browserTab.$eval("ul.pagination>li:last-child>a"
     ,anchor=>{
         try{
           return anchor.href
@@ -63,18 +67,23 @@
       
     
     });
-
+  
+     
     for(const propertyListing of properties){
     let completePropertyListing= await visitProductPage(propertyListing);
       await addOneProperty(completePropertyListing,DB_COLLECTION,COUNTRY);
-      await fs.writeFile(`${COUNTRY}-listings.json`,JSON.stringify(completePropertyListing,null,"\t"));
+      await fs.appendFile(`${COUNTRY}-listings.json`,JSON.stringify(completePropertyListing,null,"\t"));
     }
     console.log(`${nextPage?nextPage:"Next Page Not Available"}`);
     await browserTab.close();
     if(nextPage){
-    goToRootEthiopia(nextPage);
+    goToRootEthiopia(browserInstance,nextPage);
     }
     return;
+  }
+  catch(ex){
+    console.log(ex);
+  }
     }
   /**
     * 

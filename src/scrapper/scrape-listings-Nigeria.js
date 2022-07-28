@@ -4,7 +4,7 @@ import { addOneProperty } from "../database/write-listings.js";
 const firstPageUrl="https://nigeriapropertycentre.com/for-sale";
 const COUNTRY="NIGERIA";
 const DB_COLLECTION="listings";
-const browserInstance=await browser();
+var browserInstance=null;
 const page=async(link)=>{
   const page=await browserInstance.newPage();
   page.setDefaultNavigationTimeout(0);
@@ -13,7 +13,8 @@ const page=async(link)=>{
   
 }
   const propertyListings=[];
-  export const goToRootNigeria=async(link=firstPageUrl)=>{
+  export const goToRootNigeria=async(browser,link=firstPageUrl)=>{
+  browserInstance=await browser;  
   const browserTab=await page(link);
   const properties=await browserTab.$$eval('.row.property-list',propertiesList=>{
     return propertiesList.map(property=>{
@@ -63,11 +64,11 @@ const page=async(link)=>{
   for(const propertyListing of properties){
    let completePropertyListing= await visitProductPage(propertyListing);
     await addOneProperty(completePropertyListing,DB_COLLECTION,COUNTRY);
-    await fs.writeFile(`${COUNTRY}-listings.json`,JSON.stringify(completePropertyListing,null,"\t"));
+    await fs.appendFile(`${COUNTRY}-listings.json`,JSON.stringify(completePropertyListing,null,"\t"));
   }
   await browserTab.close();
   if(nextPage){
-  goToRootNigeria(nextPage);
+  goToRootNigeria(browserInstance,nextPage);
     }
     return;
   }

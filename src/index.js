@@ -1,3 +1,4 @@
+  import { browser } from "./scrapper/browser.js";
   import { goToRootKenya } from './scrapper/scrape-listings.js';
   import {goToRootEthiopia} from './scrapper/scrape-listings-Ethiopia.js'
   import { visitListingsPage } from './scrapper/scrape-listings-South-Africa.js';
@@ -7,38 +8,41 @@
   This script will do the scraping without creating a server
 
   */
+  const browserInstance=await browser();
   export const testScrapers=()=>{
   try{
-    goToRootKenya();
+    goToRootKenya(browserInstance);
   }
   catch(ex){
     console.log(ex)
   }
 
   try{
-    goToRootNigeria()
+    goToRootNigeria(browserInstance)
   }
   catch(ex){
     console.log(ex)
   }
 
   try{
-    visitListingsPage();
+    visitListingsPage(browserInstance);
   }
   catch(ex){
     console.log(ex)
   }
 
   try{
-    goToRootGhana()
+    goToRootGhana(browserInstance)
   }
   catch(ex){
     console.log(ex)
   }
   try{
-    goToRootEthiopia()
+    console.log("calling the Ethiopia Scraper");
+    goToRootEthiopia(browserInstance)
   }
   catch(ex){
     console.log(ex)
   }
   }
+  testScrapers();

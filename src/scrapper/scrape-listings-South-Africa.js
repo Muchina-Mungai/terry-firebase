@@ -4,15 +4,18 @@ import {browser} from './browser.js';
   const startUrl="https://www.century21global.com/for-sale-residential/South-Africa";
   const COUNTRY="SOUTH AFRICA";
   const WRITE_FIRESTORE_COLLECTION="listings";
-  const browserInstance=await browser();
+  var browserInstance=null;
   const makePage=async(link)=>{
     const page=await browserInstance.newPage();
     page.setDefaultNavigationTimeout(0);
     return page;
   }
-  const listingsTab=await makePage();
-  const detailsTab=await makePage();
- export const visitListingsPage=async(link=startUrl)=>{
+  var listingsTab=false;
+  var detailsTab=false;
+ export const visitListingsPage=async(browser,link=startUrl)=>{
+      browserInstance=(browserInstance)?browserInstance:(await browser);
+      listingsTab=(listingsTab)?listingsTab:(await makePage());
+      detailsTab=(detailsTab)?detailsTab:(await makePage());
       await listingsTab.goto(link);
       await listingsTab.waitForSelector('.search-result');
       const properties=await listingsTab.$$eval('.search-result',listings=>{
@@ -53,11 +56,11 @@ import {browser} from './browser.js';
       });
       for(const property of properties){
         let completeListing=await visitDetailsPage(property);
-        await fs.writeFile(`${COUNTRY}-listings.json`,JSON.stringify(completeListing,null,"\t"))
+        await fs.appendFile(`${COUNTRY}-listings.json`,JSON.stringify(completeListing,null,"\t"))
         await addOneProperty(completeListing,WRITE_FIRESTORE_COLLECTION,COUNTRY);
       }
       if(nextPage){
-       await visitListingsPage(nextPage);
+       await visitListingsPage(browserInstance,nextPage);
       }
       return;
     }

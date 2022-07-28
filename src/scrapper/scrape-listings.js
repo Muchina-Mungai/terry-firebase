@@ -1,10 +1,9 @@
-  import { browser } from "./browser.js";
   import fs from 'fs/promises';
   import { addOneProperty } from "../database/write-listings.js";
   const firstPageUrl="https://kenyapropertycentre.com/for-sale";
   const COUNTRY="KENYA";
   const COLLECTION='listings';
-  const browserInstance=await browser();
+  var browserInstance=null;
   const page=async(link)=>{
     const page=await browserInstance.newPage();
     page.setDefaultNavigationTimeout(0);
@@ -13,7 +12,8 @@
     
   }
     const propertyListings=[];
-    export const goToRootKenya=async(link=firstPageUrl)=>{
+    export const goToRootKenya=async(browser,link=firstPageUrl)=>{
+      browserInstance=await browser;
     const browserTab=await page(link);
     const properties=await browserTab.$$eval('.row.property-list'
     ,propertiesList=>{
@@ -49,11 +49,11 @@
     for(const propertyListing of properties){
      let completePropertyListing= await visitProductPage(propertyListing);
       await addOneProperty(completePropertyListing,COLLECTION,COUNTRY);
-      await fs.writeFile(`${COUNTRY}-listing.json`,JSON.stringify(completePropertyListing,null,"\t"));
+      await fs.appendFile(`${COUNTRY}-listing.json`,JSON.stringify(completePropertyListing,null,"\t"));
     }
     await browserTab.close();
     if(nextPage){
-    goToRootKenya(nextPage);
+    goToRootKenya(browserInstance,nextPage);
     }
     return;
     }

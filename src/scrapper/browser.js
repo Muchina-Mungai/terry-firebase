@@ -5,7 +5,7 @@
   puppeteer.use(AdblockerPlugin({blockTrackers:true}));
   export const browser=async ()=>{
   return await puppeteer.launch({
-    headless:true,
+    headless:false,
     args:['--no-sandbox','--disable-setuid-sandbox'],
     defaultViewport:null
 })}
