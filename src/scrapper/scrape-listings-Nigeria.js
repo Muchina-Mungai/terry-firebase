@@ -49,6 +49,7 @@ const page=async(link)=>{
       return propertyInfo;
     });
   });
+  console.log('Properties found on page : ')
   console.log(properties);
   const nextPage=await browserTab.$eval("ul.pagination> li:last-child > a"
   ,anchor=>{

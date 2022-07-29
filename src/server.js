@@ -1,19 +1,20 @@
-import express from 'express';
-import { Router } from 'express';
-import dotenv from 'dotenv';
-import { goToRootKenya } from './scrapper/scrape-listings.js';
-import {goToRootEthiopia} from './scrapper/scrape-listings-Ethiopia.js'
-import { visitListingsPage } from './scrapper/scrape-listings-South-Africa.js';
-import {goToRootNigeria} from './scrapper/scrape-listings-Nigeria.js'
-import {goToRootGhana} from './scrapper/scrape-listings-Ghana.js'
-dotenv.config();
-
+  import express from 'express';
+  import { Router } from 'express';
+  import dotenv from 'dotenv';
+  import { browser } from "./scrapper/browser.js";
+  import { goToRootKenya } from './scrapper/scrape-listings.js';
+  import {goToRootEthiopia} from './scrapper/scrape-listings-Ethiopia.js'
+  import { visitListingsPage } from './scrapper/scrape-listings-South-Africa.js';
+  import {goToRootNigeria} from './scrapper/scrape-listings-Nigeria.js'
+  import {goToRootGhana} from './scrapper/scrape-listings-Ghana.js'
+  dotenv.config();
+  const browserInstance=await browser();
   const router=Router();
   const app=express();
   app.use('/scraper',router);
   router.get("/kenya",(req,res)=>{
     try{
-      goToRootKenya();
+      goToRootKenya(browserInstance);
       res.send("Scraping from the Kenyan Website")
     }
     catch(ex){
@@ -23,7 +24,7 @@ dotenv.config();
   });
   router.get('/ethiopia',(req,res)=>{
     try{
-      goToRootEthiopia();
+      goToRootEthiopia(browserInstance);
       res.send("Scraping from the Ethiopian Website")
     }
     catch(ex){
@@ -34,7 +35,7 @@ dotenv.config();
   router.get('/ghana',(req,res)=>{
     try{
       res.send("Scraping from the Ghanaian Website")
-      goToRootGhana();
+      goToRootGhana(browserInstance);
     }
     catch(ex){
       console.log(ex);
@@ -44,7 +45,7 @@ dotenv.config();
   router.get('/nigeria',(req,res)=>{
     try{
       res.send("Scraping from the Nigerian Website");
-      goToRootNigeria()
+      goToRootNigeria(browserInstance)
     }
     catch(ex){
       console.log(ex);
@@ -54,7 +55,7 @@ dotenv.config();
   router.get('/south-africa',(req,res)=>{
     try{
       res.send("Scraping from the South African Website")
-      visitListingsPage();
+      visitListingsPage(browserInstance);
     }
     catch(ex){
       console.log(ex);
